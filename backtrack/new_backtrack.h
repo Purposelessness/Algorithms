@@ -25,13 +25,13 @@ std::vector<int> graph;
 std::unordered_map<int, std::vector<int>> rects;
 std::unordered_map<int, std::vector<int>> min_rects;
 
-void BacktrackImpl(int x, int limit, int edges) {
-  int f = graph[x];
+void BacktrackImpl(int y, int limit, int edges) {
+  int f = graph[y];
   if (f == 0) {
-    BacktrackImpl(x + 1, INT_MAX, edges);
+    BacktrackImpl(y + 1, INT_MAX, edges);
     return;
   }
-  if (x == n) {
+  if (y == n) {
     if (edges < min_edges) {
       min_edges = std::min(min_edges, edges);
       min_rects = rects;
@@ -41,17 +41,17 @@ void BacktrackImpl(int x, int limit, int edges) {
   if (edges >= min_edges || edges >= max_edges) {
     return;
   }
-  int j = std::min({f, limit, n - x, n - 1});
+  int j = std::min({f, limit, n - y, n - 1});
   for (; j >= 1; --j) {
-    graph[x] -= j;
-    graph[x + j] += j;
-    rects[x].push_back(j);
+    graph[y] -= j;
+    graph[y + j] += j;
+    rects[y].push_back(j);
     ++edges;
-    BacktrackImpl(x, j, edges);
+    BacktrackImpl(y, j, edges);
     --edges;
-    rects[x].pop_back();
-    graph[x + j] -= j;
-    graph[x] += j;
+    rects[y].pop_back();
+    graph[y + j] -= j;
+    graph[y] += j;
   }
 }
 
@@ -139,13 +139,13 @@ void Backtrack(int new_n) {
   BacktrackImpl(0, INT_MAX, 0);
   std::cout << min_edges << '\n';
 
-  for (const auto& p : min_rects) {
-    std::cout << p.first << ": ";
-    for (const auto i : p.second) {
-      std::cout << i << ", ";
-    }
-    std::cout << '\n';
-  }
+//  for (const auto& p : min_rects) {
+//    std::cout << p.first << ": ";
+//    for (const auto i : p.second) {
+//      std::cout << i << ", ";
+//    }
+//    std::cout << '\n';
+//  }
 
   rect.resize(n);
   for (auto& vec : rect) {

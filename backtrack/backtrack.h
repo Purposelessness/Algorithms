@@ -8,57 +8,61 @@
 #include <vector>
 
 struct Rect {
-  Rect(int x, int size) : x(x), size(size) {}
+  Rect(int y, int size) : y(y), size(size) {}
 
-  int x;
+  int y;
   int size;
 };
 
-int min_edges = CHAR_MAX;
-int n;
-int max_edges;
-std::vector<int> graph;
-std::vector<Rect> rects;
-std::vector<Rect> min_rects;
+int n = 2;
+int rect_count = 0;
+int min_rect_count = INT_MAX;
+int max_rect_count = INT_MAX;
+std::vector<int> levels;
+std::vector<Rect> partial_answer;
+std::vector<Rect> answer;
 
-void BacktrackImpl(int x, int limit, int edges) {
-  int f = graph[x];
+void BacktrackImpl(int y, int limit) {
+  int f = levels[y];
   if (f == 0) {
-    BacktrackImpl(x + 1, INT_MAX, edges);
+    BacktrackImpl(y + 1, INT_MAX);
     return;
   }
-  if (x == n) {
-    if (edges < min_edges) {
-      min_edges = std::min(min_edges, edges);
-      min_rects = rects;
+  if (y == n) {
+    if (rect_count < min_rect_count) {
+      min_rect_count = rect_count;
+      answer = partial_answer;
     }
     return;
   }
-  if (edges >= min_edges || edges >= max_edges) {
+  if (rect_count >= min_rect_count || rect_count >= max_rect_count) {
     return;
   }
-  int j = std::min({f, limit, n - x, n - 1});
+  int j = std::min({f, limit, n - y, n - 1});
   for (; j >= 1; --j) {
-    graph[x] -= j;
-    graph[x + j] += j;
-    rects.emplace_back(x, j);
-    ++edges;
-    BacktrackImpl(x, j, edges);
-    --edges;
-    rects.pop_back();
-    graph[x + j] -= j;
-    graph[x] += j;
+    levels[y] -= j;
+    levels[y + j] += j;
+    partial_answer.emplace_back(y, j);
+    ++rect_count;
+    BacktrackImpl(y, j);
+    --rect_count;
+    partial_answer.pop_back();
+    levels[y + j] -= j;
+    levels[y] += j;
   }
 }
 
-void Backtrack(int n) {
-  max_edges = 6 * std::log2(3 * n - 1) - 9;
-  graph.resize(n + 1);
-  graph[0] = n;
-  BacktrackImpl(0, INT_MAX, 0);
-  std::cout << min_edges << '\n';
-  std::for_each(min_rects.begin(), min_rects.end(), [](const auto& p) {
-    std::cout << p.x + 1 << ' ' << p.size << '\n';
+void Backtrack(int n_new) {
+  n = n_new;
+  levels.resize(n + 1);
+  max_rect_count = 6 * std::log2(3 * n - 1) - 9;
+  partial_answer.reserve(n);
+  answer.reserve(n);
+  levels[0] = n;
+  BacktrackImpl(0, INT_MAX);
+  std::cout << min_rect_count << '\n';
+  std::for_each(answer.begin(), answer.end(), [](const auto& p) {
+    std::cout << p.y + 1 << ' ' << p.size << '\n';
   });
 }
 
