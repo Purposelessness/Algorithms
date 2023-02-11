@@ -24,32 +24,35 @@ struct Square {
 int n = 2;
 int max_square_size = INT_MAX;
 int second_max_square_size = INT_MAX;
+
 int square_count = 0;
-int min_square_count = INT_MAX;
 int max_square_count = INT_MAX;
+int answer_size = INT_MAX;
+
 int* levels;
 Square* partial_answer;
 Square* answer;
-int answer_size;
 
 void BacktrackImpl(int y, int limit) {
   int f = levels[y];
   if (f == 0) {
+    if (y == 0) {
+      second_max_square_size = partial_answer[1].size;
+    }
     BacktrackImpl(y + 1, second_max_square_size);
     return;
   }
   if (y == n) {
-    if (square_count < min_square_count) {
-      min_square_count = square_count;
+    if (square_count < answer_size) {
       answer_size = square_count;
       std::memcpy(answer, partial_answer, answer_size * sizeof(Square));
     }
     return;
   }
-  if (square_count >= min_square_count || square_count >= max_square_count) {
+  if (square_count >= answer_size || square_count >= max_square_count) {
     return;
   }
-  int size = std::min({f, limit, n - y});
+  int size = std::min({f, n - y, limit});
   for (; size >= 1; --size) {
     levels[y] -= size;
     levels[y + size] += size;
@@ -73,7 +76,7 @@ void Backtrack(int n_new) {
   answer = new Square[max_square_count]{};
   levels[0] = n;
   BacktrackImpl(0, max_square_size);
-  std::cout << min_square_count << '\n';
+  std::cout << answer_size << '\n';
   for (int i = 0; i < answer_size; ++i) {
     std::cout << answer[i].y + 1 << ' ' << answer[i].size << '\n';
   }
