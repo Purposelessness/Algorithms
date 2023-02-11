@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include "newest_backtrack.h"
+#include "backtrack.h"
 
 int main() {
   std::cin >> n;
