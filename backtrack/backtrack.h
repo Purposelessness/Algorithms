@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <climits>
 #include <cmath>
 #include <cstring>
@@ -17,8 +18,9 @@ struct Square {
   Square() = default;
   Square(int y, int size) : y(y), size(size) {}
 
-  int y;
-  int size;
+  int x = -1;
+  int y = 0;
+  int size = 0;
 };
 
 int n = 2;
@@ -66,7 +68,61 @@ void BacktrackImpl(int y, int limit) {
   }
 }
 
+std::bitset<40>* rect;
+int answer_left = 0;
+int x_max = 0;
+
+bool FindCoords(int y) {
+  if (y == n) {
+    return answer_left <= 0;
+  }
+  if (rect[y].count() == n) {
+    return FindCoords(y + 1);
+  }
+  for (int i = 0; i < answer_size; ++i) {
+    if (answer[i].y > y) {
+      break;
+    }
+    if (answer[i].x != -1 || answer[i].y != y) {
+      continue;
+    }
+    auto size = answer[i].size;
+    // Set square
+    std::bitset<40> row(std::pow(2, size) - 1);
+    int x = 39;
+    for (; x >= x_max && rect[y][x]; --x) {
+    }
+    row <<= x - size + 1;
+    for (int j = y; j < y + size; ++j) {
+      if ((rect[j] & row).any()) {
+        goto next_square;
+      }
+    }
+    for (int j = y; j < y + size; ++j) {
+      rect[j] |= row;
+    }
+    // ------
+    answer[i].x = 40 - x;
+    --answer_left;
+    if (FindCoords(y)) {
+      return true;
+    }
+    ++answer_left;
+    answer[i].x = -1;
+    // Clear square
+    row.flip();
+    for (int j = y; j < y + size; ++j) {
+      rect[j] &= row;
+    }
+    // ----
+  next_square:
+    continue;
+  }
+  return false;
+}
+
 void Backtrack(int n_new) {
+  // Finding square sizes
   n = n_new;
   max_square_size = 0.7 * n;
   second_max_square_size = 0.5 * n;
@@ -76,13 +132,22 @@ void Backtrack(int n_new) {
   answer = new Square[max_square_count]{};
   levels[0] = n;
   BacktrackImpl(0, max_square_size);
+  delete[] levels;
+  delete[] partial_answer;
+  // Finding coords
+  answer_left = answer_size;
+  x_max = 40 - n;
+  rect = new std::bitset<40>[n];
+  FindCoords(0);
+
   std::cout << answer_size << '\n';
   for (int i = 0; i < answer_size; ++i) {
-    std::cout << answer[i].y + 1 << ' ' << answer[i].size << '\n';
+    std::cout << answer[i].y + 1 << ' ' << answer[i].x << ' ' << answer[i].size
+              << '\n';
   }
+
+  delete[] rect;
   delete[] answer;
-  delete[] partial_answer;
-  delete[] levels;
 }
 
 #endif  // BACKTRACK__BACKTRACK_H_
