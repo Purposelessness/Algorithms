@@ -14,6 +14,8 @@
 #include <iostream>
 #include <vector>
 
+#define MAX_SQUARE_SIZE 0.9
+
 struct Square {
   Square() = default;
   Square(int y, int size) : y(y), size(size) {}
@@ -35,6 +37,33 @@ int* levels;
 Square* partial_answer;
 Square* answer;
 
+static int answers_size = 1000;
+Square** answers;
+int answers_pos = 0;
+
+void InitAnswers() {
+  answers = new Square*[answers_size];
+  for (int i = 0; i < answers_size; ++i) {
+    answers[i] = new Square[max_square_count]{};
+  }
+}
+
+void PushAnswer() {
+  if (answers_pos >= answers_size) {
+    answers_pos = 0;
+  }
+  std::memcpy(answers[answers_pos++], partial_answer,
+              answer_size * sizeof(Square));
+}
+
+Square* PopAnswer() {
+  --answers_pos;
+  if (answers_pos <= 0) {
+    answers_pos = answer_size - 1;
+  }
+  return answers[answers_pos];
+}
+
 void BacktrackImpl(int y, int limit) {
   int f = levels[y];
   if (f == 0) {
@@ -45,9 +74,9 @@ void BacktrackImpl(int y, int limit) {
     return;
   }
   if (y == n) {
-    if (square_count < answer_size) {
+    if (square_count <= answer_size) {
       answer_size = square_count;
-      std::memcpy(answer, partial_answer, answer_size * sizeof(Square));
+      PushAnswer();
     }
     return;
   }
@@ -174,6 +203,7 @@ void PrimeTwoSearch() {
 void Backtrack(int n_new) {
   n = n_new;
   max_square_count = 6 * std::log2(3 * n - 1) - 9;
+  InitAnswers();
   answer = new Square[max_square_count]{};
 
   auto deg = IsPrimeOfTwo(n_new);
@@ -182,7 +212,7 @@ void Backtrack(int n_new) {
   } else {
     // Finding square sizes
     if (IsPrime(n)) {
-      max_square_size = 0.57 * n;
+      max_square_size = MAX_SQUARE_SIZE * n;
     } else {
       max_square_size = 0.75 * n;
     }
@@ -197,7 +227,11 @@ void Backtrack(int n_new) {
     answer_left = answer_size;
     x_max = 40 - n;
     rect = new std::bitset<40>[n];
-    FindCoords(0);
+    int i = answers_size;
+    do {
+      answer = PopAnswer();
+      --i;
+    } while (!FindCoords(0) && i >= 0);
     delete[] rect;
   }
 
@@ -207,7 +241,10 @@ void Backtrack(int n_new) {
               << '\n';
   }
 
-  delete[] answer;
+  for (int i = 0; i < answers_size; ++i) {
+    delete[] answers[i];
+  }
+  delete[] answers;
 }
 
 #endif  // BACKTRACK__BACKTRACK_H_
