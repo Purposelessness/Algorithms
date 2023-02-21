@@ -14,6 +14,7 @@
 #include <iostream>
 #include <vector>
 
+#define MAX_PRIME_SQUARE_SIZE 0.9
 #define MAX_SQUARE_SIZE 0.9
 
 struct Square {
@@ -25,7 +26,8 @@ struct Square {
   int size = 0;
 };
 
-int n = 2;
+int a = 2;
+int b = 2;
 int max_square_size = INT_MAX;
 int second_max_square_size = INT_MAX;
 
@@ -58,7 +60,7 @@ void PushAnswer() {
 
 Square* PopAnswer() {
   --answers_pos;
-  if (answers_pos <= 0) {
+  if (answers_pos < 0) {
     answers_pos = answer_size - 1;
   }
   return answers[answers_pos];
@@ -73,7 +75,7 @@ void BacktrackImpl(int y, int limit) {
     BacktrackImpl(y + 1, second_max_square_size);
     return;
   }
-  if (y == n) {
+  if (y == b) {
     if (square_count <= answer_size) {
       answer_size = square_count;
       PushAnswer();
@@ -83,7 +85,7 @@ void BacktrackImpl(int y, int limit) {
   if (square_count >= answer_size || square_count >= max_square_count) {
     return;
   }
-  int size = std::min({f, n - y, limit});
+  int size = std::min({f, b - y, limit});
   for (; size >= 1; --size) {
     levels[y] -= size;
     levels[y + size] += size;
@@ -102,10 +104,10 @@ int answer_left = 0;
 int x_max = 0;
 
 bool FindCoords(int y) {
-  if (y == n) {
+  if (y == b) {
     return answer_left <= 0;
   }
-  if (rect[y].count() == n) {
+  if (rect[y].count() == a) {
     return FindCoords(y + 1);
   }
   for (int i = 0; i < answer_size; ++i) {
@@ -178,14 +180,14 @@ bool IsPrime(int c) {
 void PrimeTwoSearch() {
   answer[0].x = 1;
   answer[0].y = 0;
-  int size = (n + 1) / 2;
+  int size = (a + 1) / 2;
   answer[0].size = size;
   answer[1].size = answer[2].size = size - 1;
   answer[1].x = size + 1;
   answer[2].x = 1;
   answer[2].y = size;
   answer_size = 3;
-  int t = n;
+  int t = a;
   while (size > 1) {
     size /= 2;
     answer[answer_size].size = answer[answer_size + 1].size =
@@ -200,33 +202,38 @@ void PrimeTwoSearch() {
   }
 }
 
-void Backtrack(int n_new) {
-  n = n_new;
-  max_square_count = 6 * std::log2(3 * n - 1) - 9;
+void Backtrack() {
+  bool swap = false;
+  if (a < b) {
+    std::swap(a, b);
+    swap = true;
+  }
+  max_square_count = 6 * std::log2(3 * a - 1) - 9;
   InitAnswers();
   answer = new Square[max_square_count]{};
 
-  auto deg = IsPrimeOfTwo(n_new);
-  if (deg != -1) {
-    PrimeTwoSearch();
-  } else {
-    // Finding square sizes
-    if (IsPrime(n)) {
-      max_square_size = MAX_SQUARE_SIZE * n;
+  if (a == b) {
+    if (IsPrimeOfTwo(a) != -1) {
+      PrimeTwoSearch();
     } else {
-      max_square_size = 0.75 * n;
+      max_square_size =
+          IsPrime(a) ? MAX_PRIME_SQUARE_SIZE * a : MAX_SQUARE_SIZE * a;
+      goto default_backtrack;
     }
-    second_max_square_size = 0.5 * n;
+  } else {
+    max_square_size = b;
+  default_backtrack:
+    second_max_square_size = 0.5 * a;
     partial_answer = new Square[max_square_count]{};
-    levels = new int[n + 1]{};
-    levels[0] = n;
+    levels = new int[b + 1]{};
+    levels[0] = a;
     BacktrackImpl(0, max_square_size);
     delete[] levels;
     delete[] partial_answer;
     // Finding coords
     answer_left = answer_size;
-    x_max = 40 - n;
-    rect = new std::bitset<40>[n];
+    x_max = 40 - a;
+    rect = new std::bitset<40>[b];
     int i = answers_size;
     do {
       answer = PopAnswer();
@@ -235,10 +242,15 @@ void Backtrack(int n_new) {
     delete[] rect;
   }
 
-  std::cout << answer_size << '\n';
-  for (int i = 0; i < answer_size; ++i) {
-    std::cout << answer[i].y + 1 << ' ' << answer[i].x << ' ' << answer[i].size
-              << '\n';
+  printf("%d\n", answer_size);
+  if (!swap) {
+    for (int i = 0; i < answer_size; ++i) {
+      printf("%d %d %d\n", answer[i].x, answer[i].y + 1, answer[i].size);
+    }
+  } else {
+    for (int i = 0; i < answer_size; ++i) {
+      printf("%d %d %d\n", answer[i].y + 1, answer[i].x, answer[i].size);
+    }
   }
 
   for (int i = 0; i < answers_size; ++i) {

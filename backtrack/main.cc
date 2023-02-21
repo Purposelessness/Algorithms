@@ -3,10 +3,9 @@
 #include "backtrack.h"
 
 int main() {
-  std::cin >> n;
+  scanf("%d %d", &a, &b);
   clock_t time = clock();
-  Backtrack(n);
-  std::cout << "Test time: "
-            << static_cast<double>(clock() - time) / CLOCKS_PER_SEC << '\n';
+  Backtrack();
+  printf("Test time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC);
   return 0;
 }
