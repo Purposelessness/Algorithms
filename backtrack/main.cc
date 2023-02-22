@@ -9,11 +9,14 @@
 #include "debug.h"
 
 int main() {
-  auto d = Debug();
+  DEBUG_EXPR(auto d = Debug());
+  int a, b;
   scanf("%d %d", &a, &b);
-  clock_t time = clock();
-  Backtrack(a, b);
-  printf("Test time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC);
+  DEBUG_EXPR(clock_t time = clock());
+  Solution s(a, b);
+  s.Backtrack();
+  DEBUG_EXPR(
+      printf("Test time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC));
   return 0;
 }
 
