@@ -14,7 +14,7 @@ int main() {
   scanf("%d %d", &a, &b);
   DEBUG_EXPR(clock_t time = clock());
   Solution s(a, b);
-  s.Backtrack();
+  s.backtrack();
   DEBUG_EXPR(
       printf("Test time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC));
   return 0;

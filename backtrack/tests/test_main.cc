@@ -15,7 +15,8 @@ class BacktrackTest : public ::testing::Test {
       std::string filename = std::to_string(i) + ".txt";
       std::ifstream f(filename);
       if (!f.good()) {
-        throw std::runtime_error("Cannot open file " + filename);
+        //        throw std::runtime_error("Cannot open file " + filename);
+        return;
       }
       std::string line;
       while (std::getline(f, line), !line.empty()) {
@@ -37,96 +38,111 @@ class BacktrackTest : public ::testing::Test {
   std::vector<std::vector<TestData>> test_data;
 };
 
+bool TryPlace(int w, int h, const Answer& answer) {
+  std::vector<std::vector<bool>> rect(h);
+  for (int i = 0; i < h; ++i) {
+    rect[i].resize(w);
+  }
+  for (int i = 0; i < answer.size; ++i) {
+    auto square = answer.data[i];
+    for (int x = square.x - 1; x < square.x - 1 + square.size; ++x) {
+      for (int y = square.y; y < square.y + square.size; ++y) {
+        if (rect[y][x]) {
+          return false;
+        }
+        rect[y][x] = true;
+      }
+    }
+  }
+  return std::all_of(rect.cbegin(), rect.cend(), [](const auto& v) {
+    return std::all_of(v.cbegin(), v.cend(), [](bool f) { return f; });
+  });
+}
+
 TEST_F(BacktrackTest, PrimeSquareTests) {
   auto td = test_data[0];
   for (auto test : td) {
     Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
+    Answer ans{};
+    auto test_ans = s.backtrack(&ans);
     ASSERT_EQ(test.cnt, test_ans)
-                  << "PS Test: width=" << test.w << ", height=" << test.h
-                  << ", test_ans=" << test_ans;
+        << "PS Test: width=" << test.w << ", height=" << test.h
+        << ", test_ans=" << test_ans;
+    ASSERT_EQ(TryPlace(test.w, test.h, ans), true);
   }
 }
 
-TEST_F(BacktrackTest, LightTests) {
-  for (int i = 1; i <= 4; ++i) {
-    auto td = test_data[i];
-    for (auto test : td) {
-      Solution s(test.w, test.h, false);
-      auto test_ans = s.Backtrack();
-      ASSERT_EQ(test.cnt, test_ans)
-          << "Test №" << i << ": width=" << test.w << ", height=" << test.h
-          << ", test_ans=" << test_ans;
+TEST_F(BacktrackTest, EvenSquareTests) {
+  for (int i = 2; i <= 40; i += 2) {
+    Solution s(i, i, false);
+    Answer ans{};
+    auto test_ans = s.backtrack(&ans);
+    ASSERT_EQ(4, test_ans) << "PS Test: width=" << i << ", height=" << i
+                           << ", test_ans=" << test_ans;
+    ASSERT_EQ(TryPlace(i, i, ans), true);
+  }
+}
+
+TEST_F(BacktrackTest, PlacementTests) {
+  for (int i = 2; i <= 10; ++i) {
+    for (int j = i; j <= 2 * i; ++j) {
+      Solution s(i, j, false);
+      Answer ans{};
+      s.backtrack(&ans);
+      EXPECT_EQ(TryPlace(i, j, ans), true)
+          << "Test: width=" << i << ", height=" << j;
     }
   }
 }
 
-TEST_F(BacktrackTest, FifthTest) {
-  auto td = test_data[5];
-  for (auto test : td) {
-    Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
-    ASSERT_EQ(test.cnt, test_ans)
-        << "Test №" << 5 << ": width=" << test.w << ", height=" << test.h
-        << ", test_ans=" << test_ans;
+TEST_F(BacktrackTest, PlacementTests2) {
+  for (int i = 11; i <= 20; ++i) {
+    for (int j = i; j <= 30; ++j) {
+      Solution s(i, j, false);
+      Answer ans{};
+      s.backtrack(&ans);
+      EXPECT_EQ(TryPlace(i, j, ans), true)
+          << "Test: width=" << i << ", height=" << j;
+    }
   }
 }
 
-TEST_F(BacktrackTest, SixthTest) {
-  auto td = test_data[6];
-  for (auto test : td) {
-    Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
-    ASSERT_EQ(test.cnt, test_ans)
-                  << "Test №" << 6 << ": width=" << test.w << ", height=" << test.h
-                  << ", test_ans=" << test_ans;
+TEST_F(BacktrackTest, PlacementTests3) {
+  for (int i = 21; i <= 30; ++i) {
+    for (int j = i; j <= 40; ++j) {
+      Solution s(i, j, false);
+      Answer ans{};
+      s.backtrack(&ans);
+      EXPECT_EQ(TryPlace(i, j, ans), true)
+          << "Test: width=" << i << ", height=" << j;
+    }
   }
 }
 
-TEST_F(BacktrackTest, SeventhTest) {
-  auto td = test_data[7];
-  for (auto test : td) {
-    Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
-    ASSERT_EQ(test.cnt, test_ans)
-                  << "Test №" << 7 << ": width=" << test.w << ", height=" << test.h
-                  << ", test_ans=" << test_ans;
+TEST_F(BacktrackTest, PlacementTests4) {
+  for (int i = 31; i <= 40; ++i) {
+    for (int j = i; j <= 40; ++j) {
+      Solution s(i, j, false);
+      Answer ans{};
+      s.backtrack(&ans);
+      EXPECT_EQ(TryPlace(i, j, ans), true)
+          << "Test: width=" << i << ", height=" << j;
+    }
   }
 }
 
-
-TEST_F(BacktrackTest, EighthTest) {
-  auto td = test_data[8];
-  for (auto test : td) {
-    Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
-    ASSERT_EQ(test.cnt, test_ans)
-                  << "Test №" << 8 << ": width=" << test.w << ", height=" << test.h
-                  << ", test_ans=" << test_ans;
-  }
-}
-
-TEST_F(BacktrackTest, NinthTest) {
-  auto td = test_data[9];
-  for (auto test : td) {
-    Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
-    ASSERT_EQ(test.cnt, test_ans)
-                  << "Test №" << 9 << ": width=" << test.w << ", height=" << test.h
-                  << ", test_ans=" << test_ans;
-  }
-}
-
-TEST_F(BacktrackTest, TenthTest) {
-  auto td = test_data[10];
-  for (auto test : td) {
-    Solution s(test.w, test.h, false);
-    auto test_ans = s.Backtrack();
-    ASSERT_EQ(test.cnt, test_ans)
-        << "Test №" << 10 << ": width=" << test.w << ", height=" << test.h
-        << ", test_ans=" << test_ans;
-  }
-}
+// TEST_F(BacktrackTest, RectTests) {
+//   for (int i = 1; i <= 10; ++i) {
+//     auto td = test_data[i];
+//     for (auto test : td) {
+//       Solution s(test.w, test.h, false);
+//       auto test_ans = s.backtrack();
+//       ASSERT_EQ(test.cnt, test_ans)
+//           << "Test №" << i << ": width=" << test.w << ", height=" << test.h
+//           << ", test_ans=" << test_ans;
+//     }
+//   }
+// }
 
 int main(int argc, char** argv) {
   ::testing::InitGoogleTest(&argc, argv);

@@ -5,9 +5,10 @@
 #ifndef BACKTRACK__DEBUG_H_
 #define BACKTRACK__DEBUG_H_
 
+// #define DEBUG_EX
 // #define DEBUG_RECT
 // #define DEBUG
-//  #define FDEBUG
+// #define FDEBUG
 
 #include <bitset>
 #include <iostream>
@@ -22,21 +23,21 @@ class Debug {
  public:
   Debug() {
 #ifdef FDEBUG
-    out_file_ = std::freopen("out.txt", "w", stdout);
+    outFile_ = std::freopen("out.txt", "w", stdout);
 #endif
   }
 
   ~Debug() {
-    if (out_file_ != nullptr) {
+    if (outFile_ != nullptr) {
       std::fclose(stdout);
     }
   }
 
  private:
-  FILE* out_file_ = nullptr;
+  FILE* outFile_ = nullptr;
 };
 
-#ifdef DEBUG
+#ifdef DEBUG_EX
 #define DEBUG_EXPR(x) x;
 #else
 #define DEBUG_EXPR(x)
@@ -48,7 +49,7 @@ class Debug {
 #define PRINT(x)
 #endif
 
-void PrintRect(int w, int h, int answer_size, Square* answer) {
+void printRect(int w, int h, int answer_size, Square* answer) {
   std::vector<std::vector<int>> matrix(h);
   for (int i = 0; i < h; ++i) {
     matrix[i].resize(w);
@@ -70,12 +71,12 @@ void PrintRect(int w, int h, int answer_size, Square* answer) {
 }
 
 #ifdef DEBUG_RECT
-#define PRINT_RECT(w, h, x, y) PrintRect(w, h, x, y)
+#define PRINT_RECT(w, h, x, y) printRect(w, h, x, y)
 #else
 #define PRINT_RECT(w, h, x, y)
 #endif
 
-void PrintFlow(int* levels, int levels_cnt, int a, int b) {
+void printFlow(int* levels, int levels_cnt, int a, int b) {
   for (int i = 0; i < levels_cnt; ++i) {
     if (i == a) {
       if (b == -1) {
@@ -92,12 +93,12 @@ void PrintFlow(int* levels, int levels_cnt, int a, int b) {
 }
 
 #ifdef DEBUG
-#define PRINT_FLOW(x, y, w, z) PrintFlow(x, y, w, z)
+#define PRINT_FLOW(x, y, w, z) printFlow(x, y, w, z)
 #else
 #define PRINT_FLOW(x, y, w, z)
 #endif
 
-void PrintMatrix(std::bitset<40>* matrix, int a, int b) {
+void printMatrix(std::bitset<40>* matrix, int a, int b) {
   for (int i = 0; i < b; ++i) {
     auto s = matrix[i].to_string();
     s.resize(a);
@@ -106,12 +107,12 @@ void PrintMatrix(std::bitset<40>* matrix, int a, int b) {
 }
 
 #ifdef DEBUG
-#define PRINT_MATRIX(x, y, z) PrintMatrix(x, y, z)
+#define PRINT_MATRIX(x, y, z) printMatrix(x, y, z)
 #else
 #define PRINT_MATRIX(x, y, z)
 #endif
 
-void PrintPartialAnswer(Square* answer, int size) {
+void printPartialAnswer(Square* answer, int size) {
   std::cout << "(h, s): ";
   for (int i = 0; i < size; ++i) {
     printf("(%d %d), ", answer[i].y + 1, answer[i].size);
@@ -120,7 +121,7 @@ void PrintPartialAnswer(Square* answer, int size) {
 }
 
 #ifdef DEBUG
-#define PRINT_ANSWER(x, y) PrintPartialAnswer(x, y)
+#define PRINT_ANSWER(x, y) printPartialAnswer(x, y)
 #else
 #define PRINT_ANSWER(x, y)
 #endif

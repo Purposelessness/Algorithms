@@ -4,6 +4,7 @@
 struct Square {
   Square() = default;
   Square(int y, int size) : y(y), size(size) {}
+  Square(int x, int y, int size) : x(x), y(y), size(size) {}
 
   int x = -1;
   int y = 0;
