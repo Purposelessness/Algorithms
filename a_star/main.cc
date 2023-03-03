@@ -1,8 +1,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "astar.h"
 #include "greedy.h"
-#include "solution.h"
 
 int main() {
   std::string buf;
@@ -32,7 +32,7 @@ int main() {
 //  }
   Greedy greedy;
   std::cout << "Greedy: " << greedy.Solve(graph).data() << '\n';
-  Solution solution;
-  std::cout << solution.Solve(graph).data() << '\n';
+  AStar solution;
+  std::cout << "A*: " << solution.Solve(graph).data() << '\n';
   return 0;
 }

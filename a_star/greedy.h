@@ -8,8 +8,8 @@
 #include <unordered_set>
 #include <vector>
 
+#include "astar.h"
 #include "graph.h"
-#include "solution.h"
 
 #define NODE(x) graph_.data[x]
 #define CONTAINS(c, x) (std::find(c.cbegin(), c.cend(), x) != c.end())
