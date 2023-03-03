@@ -8,6 +8,7 @@
 struct Path {
   char a, b;
   float length;
+  bool enabled = true;
 };
 
 struct Node {
