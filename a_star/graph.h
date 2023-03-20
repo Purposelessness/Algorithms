@@ -6,28 +6,28 @@
 #include <vector>
 
 struct Path {
-  char a, b;
-  float length;
+  int a{}, b{};
+  float length{};
   bool enabled = true;
 };
 
 struct Node {
-  inline void SetParent(char ch, int new_length, int new_weight) {
-    previous = ch;
-    path_length = new_length;
-    weight = new_weight;
+  inline void setParent(int newParent, int newLength, int newWeight) {
+    parent = newParent;
+    pathLength = newLength;
+    weight = newWeight;
   }
 
-  char data = 0;
-  char previous = 0;
-  int path_length = 0;
+  int data = 0;
+  int parent = 0;
+  int pathLength = 0;
   int weight = INT_MAX;
   std::vector<Path> paths;
 };
 
 struct Graph {
-  char start, finish;
-  std::unordered_map<char, Node> data;
+  int start, finish;
+  std::unordered_map<int, Node> data;
 };
 
 #endif  // A_STAR__GRAPH_H_

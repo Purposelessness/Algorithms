@@ -8,4 +8,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=leak -O1 -fno-omit-frame-pointer -g")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread -fPIE -pie -g -O1 -fno-omit-frame-pointer -g")
 
-add_executable(a_star main.cc graph.cc)
+add_executable(program main.cc debug.cc debug.h config.h)

@@ -1,0 +1,3 @@
+/home/purposelessness/cpp/algorithms/a_star/build/CMakeFiles/program.dir
+/home/purposelessness/cpp/algorithms/a_star/build/CMakeFiles/edit_cache.dir
+/home/purposelessness/cpp/algorithms/a_star/build/CMakeFiles/rebuild_cache.dir

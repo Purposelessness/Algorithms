@@ -8,64 +8,108 @@
 #include <unordered_set>
 #include <vector>
 
-#include "astar.h"
 #include "graph.h"
 
 #define NODE(x) graph_.data[x]
-#define CONTAINS(c, x) (std::find(c.cbegin(), c.cend(), x) != c.end())
-#define ERASE(c, x) (c.erase(std::remove(c.begin(), c.end(), x), c.end()))
 
 class Greedy {
  public:
-  std::string Solve(const Graph& graph) {
+  // Main function of the algorithm
+  std::vector<int> solve(const Graph& graph) {
+    PRINT("--- Greedy algorithm ---\n")
     graph_ = graph;
-    path_.reserve(graph_.finish - graph_.start);
+    path_.reserve(std::abs(graph_.finish - graph_.start));
+    // Set start node
     current_ = graph_.start;
+    // Loop while do not find destination
     while (current_ != graph_.finish) {
-      SelectNearest();
+      PRINT(SYMBOL(current_) << " -> ?\n")
+      if (!selectNearest()) {
+        PRINT("There is no path\n");
+        return {};
+      }
     }
-    std::string result;
+    PRINT("Destination reached\n")
+    // Writing down results
+    std::vector<int> result;
     result.reserve(path_.size());
     std::for_each(path_.cbegin(), path_.cend(),
-                  [&result](Path* path) { result += path->a; });
-    result += graph_.finish;
+                  [&result](Path* path) { result.push_back(path->a); });
+    result.push_back(graph_.finish);
     return result;
   }
 
  private:
-  inline void SelectNearest() {
-    int min_len = INT_MAX;
-    char min_c = 0;
+  // Function for searching and selecting nearest node
+  inline bool selectNearest() {
+    PRINT("Trying to select nearest node.\n")
+    int minLen = INT_MAX;
+    int minC = 0;
+    bool found = false;
     auto& node = NODE(current_);
     Path* path = nullptr;
+    // Iterate over all paths from current node
     for (auto& p : node.paths) {
+      PRINT(SYMBOL(p.a) << " -> " << SYMBOL(p.b) << " = " << p.length
+                        << " (enabled = " << p.enabled << ")\n");
+      // If path is disabled -> program already visited it
+      // If close contains node -> this node is dead end
       if (!p.enabled || close_.contains(p.b)) {
+        PRINT("This path is unavailable\n")
         continue;
       }
-      int len = node.path_length + int(p.length);
-      if (len < min_len) {
-        min_len = len;
-        min_c = p.b;
+      // Calculate new length
+      int len = node.pathLength + int(p.length);
+      if (len < minLen) {
+#ifdef DEBUG
+        if (!found) {
+          PRINT("Selecting this path\n")
+        } else {
+          PRINT("This path is better than previous one ("
+                << len - node.pathLength << " < " << minLen - node.pathLength
+                << ")\n")
+        }
+#endif
+        minLen = len;
+        minC = p.b;
         path = &p;
+        found = true;
       }
+#ifdef DEBUG
+      else {
+        PRINT("This path isn't optimal ("
+              << len - node.pathLength << " >= " << minLen - node.pathLength << ")\n")
+      }
+#endif
     }
-    if (min_c == 0) {
+    // If node has no adjacent nodes then it is a dead end -> add it to close_
+    if (!found) {
+      PRINT("The path is dead end.\n")
       close_.insert(current_);
-      current_ = node.previous;
+      current_ = node.parent;
+      if (path_.empty()) {
+        return false;
+      }
       path_.pop_back();
-      return;
+      return true;
     }
-    auto& min_node = NODE(min_c);
-    min_node.SetParent(current_, min_len, min_len);
+    PRINT("Selected node `" << SYMBOL(minC) << "`, total length = " << minLen
+                            << '\n')
+    auto& minNode = NODE(minC);
+    // Select new node
+    minNode.setParent(current_, minLen, minLen);
     path->enabled = false;
     path_.push_back(path);
-    current_ = min_c;
+    current_ = minC;
+    return true;
   }
 
   Graph graph_;
-  char current_ = 0;
+  int current_ = 0;
+  // The result path
   std::vector<Path*> path_;
-  std::unordered_set<char> close_;
+  // Dead-end nodes
+  std::unordered_set<int> close_;
 };
 
 #endif  // A_STAR__GREEDY_H_
