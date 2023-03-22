@@ -1,3 +1,4 @@
+.cache/
 tests/cmake_build/
-cmake_build/
+build/
 tests.txt

@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/program.dir/main.cc.o CMakeFiles/program.dir/debug.cc.o -o program 
