@@ -106,12 +106,12 @@ class Solution {
   static inline std::pair<int, int> FindColumnMinimal(
       Graph& graph, int y0, int y1, int x, int min_weight = INT_MAX) {
     int k = 0;
-    for (int j = y0; j < y1; ++j) {
+    for_column(y0, y1, {
       if (is_valid(j, x) && _graph[j][x] < min_weight) {
         min_weight = _graph[j][x];
         k = j;
       }
-    }
+    });
     return {k, min_weight};
   }
 };
