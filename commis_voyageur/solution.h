@@ -5,9 +5,6 @@
 
 #include "graph.h"
 
-#define _graph graph.data
-#define _size int(graph.data.size())
-
 class Solution {
  public:
   struct Answer {
@@ -25,41 +22,42 @@ class Solution {
     auto null_edges = RowReduction(graph, d);
     auto column_set = ColumnReduction(graph, d);
     null_edges.insert(column_set.cbegin(), column_set.cend());
-    return null_edges; }
+    return null_edges;
+  }
 
   static PointSet RowReduction(Graph& graph, int& d) {
     PointSet set;
-    for (int j = 0; j < _size; ++j) {
+    for_column(0, _size, {
       auto min_edge = FindRowMinimal(graph, j, 0, _size);
       int min_weight = min_edge.second;
       d += min_weight;
-      for (int i = 0; i < _size; ++i) {
-        if (IsValid(_graph[j][i])) {
+      for_row(0, _size, {
+        if (is_valid(j, i)) {
           _graph[j][i] -= min_weight;
           if (_graph[j][i] == 0) {
             set.emplace(j, i);
           }
         }
-      }
-    }
+      });
+    });
     return set;
   }
 
   static PointSet ColumnReduction(Graph& graph, int& d) {
     PointSet set;
-    for (int i = 0; i < _size; ++i) {
+    for_row(0, _size, {
       auto min_edge = FindColumnMinimal(graph, 0, _size, i);
       int min_weight = min_edge.second;
       d += min_weight;
-      for (int j = 0; j < _size; ++j) {
-        if (IsValid(_graph[j][i])) {
+      for_column(0, _size, {
+        if (is_valid(j, i)) {
           _graph[j][i] -= min_weight;
           if (_graph[j][i] == 0) {
             set.emplace(j, i);
           }
         }
-      }
-    }
+      });
+    });
     return set;
   }
 
@@ -90,19 +88,17 @@ class Solution {
     return new_branch;
   }
 
-  static inline bool IsValid(int node) { return node > -1; }
-
   // Find minimal edge in row
   static inline std::pair<int, int> FindRowMinimal(Graph& graph, int y, int x0,
                                                    int x1,
                                                    int min_weight = INT_MAX) {
     int k = 0;
-    for (int i = x0; i < x1; ++i) {
-      if (IsValid(_graph[y][i]) && _graph[y][i] < min_weight) {
+    for_row(x0, x1, {
+      if (is_valid(y, i) && _graph[y][i] < min_weight) {
         min_weight = _graph[y][i];
         k = i;
       }
-    }
+    });
     return {k, min_weight};
   }
 
@@ -111,7 +107,7 @@ class Solution {
       Graph& graph, int y0, int y1, int x, int min_weight = INT_MAX) {
     int k = 0;
     for (int j = y0; j < y1; ++j) {
-      if (IsValid(_graph[j][x]) && _graph[j][x] < min_weight) {
+      if (is_valid(j, x) && _graph[j][x] < min_weight) {
         min_weight = _graph[j][x];
         k = j;
       }

@@ -31,7 +31,7 @@ TEST_F(MainTest, ReductionTest) {
   auto null_vec = Solution::Reduction(graph, d);
   PointSet correct_null_vec = {{0, 1}, {1, 0}, {2, 4}, {3, 4}, {4, 2}, {4, 3}};
   EXPECT_EQ(d, 47);
-  EXPECT_EQ(graph == reduced_graph, true);
+  EXPECT_EQ(graph.data == reduced_graph.data, true);
   EXPECT_EQ(null_vec == correct_null_vec, true);
 }
 
