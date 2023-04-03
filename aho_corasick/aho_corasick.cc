@@ -26,8 +26,8 @@ std::vector<std::pair<int, int>> AhoCorasick::Solve(
     int d = v;
     while (d != 0) {
       if (trie_[d].term) {
-        auto& str = trie_[d].str;
-        int index = i - trie_[d].str.size() + 1;
+        int index = i - trie_[d].depth + 1;
+        std::string str(text, index, trie_[d].depth);
         printf("%d %s\n", index, str.data());
         ans.emplace_back(index, indices[str]);
       }
@@ -46,7 +46,7 @@ void AhoCorasick::AddToTrie(const std::string& s) {
       trie_[v].to[c] = trie_.size() - 1;
     }
     int u = trie_[v].to[c];
-    trie_[u].str = trie_[v].str + char(c + kA);
+    trie_[u].depth = trie_[v].depth + 1;
     v = u;
   }
   trie_[v].term = true;

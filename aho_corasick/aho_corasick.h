@@ -17,7 +17,7 @@ class AhoCorasick {
     int to[kN]{};
     bool term = false;
     int link = -1;
-    std::string str;
+    int depth = 0;
   };
 
   AhoCorasick();
