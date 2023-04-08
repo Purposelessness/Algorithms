@@ -10,4 +10,4 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 add_subdirectory(tests)
 
-add_executable(program main.cc debug.cc)
+add_executable(program main.cc debug.cc approximate.cc)
