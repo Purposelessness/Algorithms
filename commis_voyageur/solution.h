@@ -17,11 +17,12 @@ class Solution {
 
  public:
   [[nodiscard]] Path Solve(const Graph& graph, int estimated_len = INT_MAX) {
-    print("starting graph\n");
-    print_graph(graph);
     approximate_path_length_ = estimated_len;
     optimal_path_.length = INT_MAX;
     Data data{graph, {}};
+    print("Graph:\n");
+    print_graph(graph);
+    print("\n");
     ReduceMatrix(data.graph, data.path.length);
     BnB(std::move(data));
     return optimal_path_;
@@ -89,7 +90,25 @@ class Solution {
   }
 
   void IncludeEdge(Data data, const Point& edge) {
+    print("Including edge: (" << edge.y + 1 << ", " << edge.x + 1 << ")\n\n");
     data.path.PushEdge(edge);
+#ifdef DEBUG
+    std::cout << "Edges: ";
+    for (const auto& e : data.path.edges) {
+      std::cout << '(' << e.y + 1 << ", " << e.x + 1 << ") ";
+    }
+    std::cout << '\n';
+    std::cout << "Path: ";
+    if (data.path.data.empty()) {
+      std::cout << "empty";
+    } else {
+      for (int i : data.path.data) {
+        std::cout << i + 1 << " ";
+      }
+    }
+    std::cout << '\n';
+    std::cout << "Length: " << data.path.length << "\n\n";
+#endif
     // Check if answer
     if (data.path.data.size() == d_graph.size() + 1) {
       TryOverrideOptimalPath(data.path);
@@ -116,12 +135,16 @@ class Solution {
   }
 
   static void CloseBack(Data& data, const Point& edge) {
+    print("Closing edges:\n");
     d_graph[edge.x][edge.y] = infty;
+    print("(" << edge.x + 1 << ", " << edge.y + 1 << ")\n");
     if (data.path.IsConstructed() &&
-        data.path.length < int(data.graph.data.size())) {
+        data.path.data.size() < data.graph.data.size()) {
       auto p = data.path.GetCyclePoint();
       d_graph[p.y][p.x] = infty;
+      print("(" << p.y + 1 << ", " << p.x + 1 << ")\n");
       d_graph[p.x][p.y] = infty;
+      print("(" << p.x + 1 << ", " << p.y + 1 << ")\n");
     }
   }
 
@@ -161,6 +184,9 @@ class Solution {
     auto null_edges = ReduceRows(graph, d);
     auto column_set = ReduceColumns(graph, d);
     null_edges.insert(column_set.cbegin(), column_set.cend());
+    print("Matrix reduced:\n");
+    print_graph(graph);
+    print("D = " << d << "\n\n");
     return null_edges;
   }
 
@@ -243,6 +269,16 @@ class Solution {
     // TODO: Estimations
     if (!IsSimple(data.graph)) {
     }
+
+#ifdef DEBUG
+    if (data.path.length > approximate_path_length_ ||
+        data.path.length >= optimal_path_.length) {
+      std::cout << "Path is not optimal!\n\n";
+      return false;
+    } else {
+      return true;
+    }
+#endif
 
     return data.path.length <= approximate_path_length_ &&
            data.path.length < optimal_path_.length;

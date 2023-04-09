@@ -35,11 +35,11 @@ Graph ReadGraph(const std::string& filename = "") {
 }
 
 int main() {
-  //  Graph graph = {.data{{infty, 25, 40, 31, 27},
-  //                       {5, infty, 17, 30, 25},
-  //                       {19, 15, infty, 6, 1},
-  //                       {9, 50, 24, infty, 6},
-  //                       {22, 8, 7, 10, infty}}};
+  //    Graph graph = {.data{{infty, 25, 40, 31, 27},
+  //                         {5, infty, 17, 30, 25},
+  //                         {19, 15, infty, 6, 1},
+  //                         {9, 50, 24, infty, 6},
+  //                         {22, 8, 7, 10, infty}}};
   Graph graph = {.data{{infty, 27, 43, 16, 30, 26},
                        {7, infty, 16, 1, 30, 25},
                        {20, 13, infty, 35, 5, 0},
@@ -49,7 +49,12 @@ int main() {
   //  Graph graph = ReadGraph("1.txt");
   Solution solution;
   auto approximation = Approximate::Solve(graph);
-  printf("%d\n", approximation.length);
+  printf("Approximate path: ");
+  for (int i : approximation.data) {
+    printf("%d ", i);
+  }
+  putchar('\n');
+  printf("Approximate path length: %d\n\n", approximation.length);
   clock_t time = clock();
   auto path = solution.Solve(graph, approximation.length);
   printf("Time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC);
