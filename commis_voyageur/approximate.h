@@ -6,7 +6,20 @@
 
 class Approximate {
  public:
-  static Path Solve(Graph graph, int start_point) {
+  static Path Solve(const Graph& graph) {
+    int max_length = INT_MAX;
+    Path optimal_path;
+    for (int i = 0; i < int(_graph.size()); ++i) {
+      auto path = SolveForStartPoint(graph, i);
+      if (path.length < max_length) {
+        max_length = path.length;
+        optimal_path = path;
+      }
+    }
+    return optimal_path;
+  }
+
+  static Path SolveForStartPoint(Graph graph, int start_point) {
     Path path{};
     graph.crossed_columns.emplace(start_point);
     _path.push_back(start_point);
@@ -19,10 +32,13 @@ class Approximate {
     }
 
     int j = start_point;
-    for (int i : _path) {
-      path.length += _graph[j][i];
-      j = i;
+    for (int i = 1; i < int(path.data.size()); ++i) {
+      int k = path.data[i];
+      path.length += _graph[j][k];
+      j = k;
     }
+    path.length += _graph[j][start_point];
+    path.data.push_back(start_point);
 
     return path;
   }
