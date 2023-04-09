@@ -152,6 +152,7 @@ class Solution {
     // Exclude edge
     const auto& edge = branch[0];
     d_graph[edge.y][edge.x] = infty;
+    print("Closing edge: (" << edge.y + 1 << ", " << edge.x + 1 << ")\n");
 
     // Reduce matrix
     const auto& d = branch[1];
@@ -173,6 +174,9 @@ class Solution {
         }
       })
     }
+    print("Matrix reduced:\n");
+    print_graph(data.graph);
+    print("D = " << data.path.length << "\n\n");
 
     // If path is still optimal go to next step
     if (IsStillOptimal(data)) {
@@ -271,17 +275,21 @@ class Solution {
     }
 
 #ifdef DEBUG
-    if (data.path.length > approximate_path_length_ ||
-        data.path.length >= optimal_path_.length) {
-      std::cout << "Path is not optimal!\n\n";
+    if (data.path.length >= optimal_path_.length) {
+      std::cout << "Path is not optimal: " << data.path.length
+                << " >= " << optimal_path_.length << "\n\n";
       return false;
-    } else {
-      return true;
     }
+    if (data.path.length > approximate_path_length_) {
+      std::cout << "Path is not optimal: " << data.path.length << " > "
+                << approximate_path_length_ << "\n\n";
+      return false;
+    }
+    return true;
 #endif
 
-    return data.path.length <= approximate_path_length_ &&
-           data.path.length < optimal_path_.length;
+    return data.path.length < optimal_path_.length &&
+           data.path.length <= approximate_path_length_;
   }
 
  private:
