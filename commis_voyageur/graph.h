@@ -89,8 +89,10 @@ struct Path {
       }
       if (it->x == begin) {
         data.insert(data.begin(), it->y);
+        begin = data[0];
       } else {
         data.push_back(it->x);
+        end = data[data.size() - 1];
       }
       edges.erase(it);
     }
