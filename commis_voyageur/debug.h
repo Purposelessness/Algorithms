@@ -14,7 +14,7 @@ void PrintGraph(const Graph& graph);
 #endif
 
 #ifdef DEBUG
-#define print(x) std::cout << x;
+#define print(x) std::cout << x
 #else
 #define print(x)
 #endif
