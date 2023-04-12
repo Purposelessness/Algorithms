@@ -17,6 +17,7 @@ class Solution {
   };
 
  public:
+  // Main function to solve commis-voyageur task
   [[nodiscard]] Path Solve(const Graph& graph, int estimated_len = INT_MAX) {
     optimal_path_.length = estimated_len;
     Data data{graph, {}};
@@ -28,6 +29,7 @@ class Solution {
     return optimal_path_;
   }
 
+  // Main function to solve commis-voyageur chain task
   [[nodiscard]] Path SolveChain(const Graph& graph, int starting_point,
                                 int estimated_len = INT_MAX) {
     optimal_path_.length =
@@ -35,6 +37,7 @@ class Solution {
     Data data{graph, {}};
     Point exit_edge = {_size - 1, starting_point};
 
+    // Select path from fictitious vertex to starting point
     data.path.PushEdge(exit_edge);
     data.graph.crossed_columns.insert(exit_edge.x);
     data.graph.crossed_rows.insert(exit_edge.y);
@@ -48,11 +51,14 @@ class Solution {
     return optimal_path_;
   }
 
+  // Main recursion function
   void BnB(Data data) {
     bool status = false;
+    // Find new edge to include/exclude
     auto branch = FindMaxDeltaD(data.graph, status);
     if (!status) return;
     IncludeEdge(data, branch.first);
+    // Exclude edge only if matrix is greater than 2x2
     if (!IsSimple(data.graph)) {
       ExcludeEdge(data, branch);
     }
@@ -82,6 +88,7 @@ class Solution {
     auto null_edges = FindNullEdges(graph);
     std::pair<Point, Point> new_branch;
     int max_d = 0;
+    // Check all null edges and find one with max d
     for (const auto& p : null_edges) {
       auto row_edge = FindRowMinimal(graph, p.y, 0, p.x);
       auto row_edge2 =
@@ -136,6 +143,7 @@ class Solution {
     data.graph.crossed_columns.insert(edge.x);
     data.graph.crossed_rows.insert(edge.y);
 
+    // Close backwards path
     CloseBack(data, edge);
 
     ReduceMatrix(data.graph, data.path.length);
@@ -282,6 +290,7 @@ class Solution {
   }
 
   [[nodiscard]] bool IsStillOptimal(const Data& data) const {
+    // Check 2 estimations
     if (!IsSimple(data.graph)) {
       if (data.path.length + TwoEdgesEstimation(data.graph) >
           optimal_path_.length) {
@@ -304,7 +313,7 @@ class Solution {
     return true;
 #endif
 
-    return data.path.length <= optimal_path_.length;
+    return data.path.length < optimal_path_.length;
   }
 
   static int TwoEdgesEstimation(const Graph& graph) {
