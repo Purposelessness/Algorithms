@@ -5,50 +5,125 @@
 #include "graph.h"
 #include "solution.h"
 
-Graph ReadGraph(const std::string& filename = "") {
+struct InputData {
+  Graph graph;
+  int starting_point{};
+};
+
+InputData ReadGraph(const std::string& filename = "") {
   int n = 0;
+  int starting_point = 0;
   Graph graph{};
-  if (filename.empty()) {
-    std::cin >> n;
-    graph.data.resize(n);
-    for (int i = 0; i < n; ++i) {
-      graph.data[i].resize(n);
-      for (int j = 0; j < n; ++j) {
-        std::cin >> graph.data[i][j];
-      }
+  if (filename.empty()) exit(EXIT_FAILURE);
+
+  std::ifstream file(filename);
+  if (!file.good()) {
+    std::cout << "No such file\n";
+    exit(EXIT_SUCCESS);
+  }
+  file >> n >> starting_point;
+  --starting_point;
+  if (starting_point < 0 || starting_point >= n) {
+    std::cout << "Incorrect starting point!\n";
+    exit(EXIT_SUCCESS);
+  }
+  graph.data.resize(n + 1);
+  for (int i = 0; i < n; ++i) {
+    graph.data[i].resize(n + 1);
+    for (int j = 0; j < n; ++j) {
+      file >> graph.data[i][j];
     }
-  } else {
-    std::ifstream file(filename);
-    if (!file.good()) {
-      return graph;
-    }
-    file >> n;
-    graph.data.resize(n);
-    for (int i = 0; i < n; ++i) {
-      graph.data[i].resize(n);
-      for (int j = 0; j < n; ++j) {
-        file >> graph.data[i][j];
-      }
+    graph.data[i][n] = 0;
+  }
+  graph.data[n].resize(n + 1);
+  std::fill(graph.data[n].begin(), graph.data[n].end(), infty);
+  graph.data[n][starting_point] = 0;
+  return {graph, starting_point};
+}
+
+InputData ReadGraphOld(const std::string& filename = "") {
+  int n = 0;
+  int starting_point = 0;
+  Graph graph{};
+  if (filename.empty()) return {};
+
+  std::ifstream file(filename);
+  if (!file.good()) return {};
+  file >> n >> starting_point;
+  --starting_point;
+  graph.data.resize(n);
+  for (int i = 0; i < n; ++i) {
+    graph.data[i].resize(n);
+    for (int j = 0; j < n; ++j) {
+      file >> graph.data[i][j];
     }
   }
-  return graph;
+
+  return {graph, starting_point};
+}
+
+std::vector<int> NormalizePath(Path& path, int starting_point, int fictitious) {
+  std::vector<int> answer;
+  answer.resize(path.data.size() - 2);
+  if (path.data[0] == fictitious) {
+    std::copy(path.data.begin() + 1, path.data.end() - 1, answer.begin());
+  } else if (path.data[0] == starting_point) {
+    std::copy(path.data.begin(), path.data.end() - 2, answer.begin());
+  } else {
+    auto it = std::find(path.data.begin(), path.data.end(), starting_point);
+    std::copy(it, path.data.end(), answer.begin());
+    std::copy(path.data.begin() + 1, it - 1,
+              answer.begin() + (path.data.end() - it));
+  }
+  return answer;
+}
+
+bool IsApproximationValid(const Graph& graph, const Path& path) {
+  auto j = path.data[0];
+  for (int i = 1; i < int(path.data.size()); ++i) {
+    auto next = path.data[i];
+    if (_graph[j][next] == infty) return false;
+    j = next;
+  }
+  return true;
 }
 
 int main() {
-  Graph graph = ReadGraph("0.txt");
-  Solution solution;
-  auto approximation = Approximate::Solve(graph);
-  printf("Approximate path: ");
-  for (int i : approximation.data) {
-    printf("%d ", i);
+  auto p = ReadGraph("0.txt");
+  auto graph = std::move(p.graph);
+  auto starting_point = p.starting_point;
+
+  auto approximation = Approximate::SolveForStartPoint(graph, starting_point);
+  if (approximation.data.empty()) {
+    std::cout << "Cannot approximate.\n";
+  } else {
+    approximation.data.erase(approximation.data.end() - 2,
+                             approximation.data.end());
+    if (!IsApproximationValid(graph, approximation)) {
+      std::cout << "Cannot approximate.\n";
+      approximation.length = INT_MAX;
+    } else {
+      printf("Approximate path: ");
+      for (int i : approximation.data) {
+        printf("%d ", i + 1);
+      }
+      putchar('\n');
+      printf("Approximate path length: %d\n\n", approximation.length);
+    }
   }
-  putchar('\n');
-  printf("Approximate path length: %d\n\n", approximation.length);
+
   clock_t time = clock();
-  auto path = solution.Solve(graph, approximation.length);
+  Solution solution;
+  auto path = solution.SolveChain(graph, starting_point);
   printf("Time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC);
-  printf("Path is: ");
-  for (int i : path.data) {
+
+  if (path.data.empty()) {
+    std::cout << "No path\n";
+    return 0;
+  }
+  auto answer = NormalizePath(path, starting_point, int(graph.data.size() - 1));
+  printf("Answer is: ");
+  for (int i : answer) {
     printf("%d ", i + 1);
   }
   putchar('\n');

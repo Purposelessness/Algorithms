@@ -3,7 +3,7 @@
 
 #include "graph.h"
 
-#define DEBUG
+//#define DEBUG
 
 void PrintGraph(const Graph& graph);
 

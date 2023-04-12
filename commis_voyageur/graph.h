@@ -19,8 +19,20 @@ struct Graph {
     expr;                                         \
   }
 
+#define foreach_column(expr)                      \
+  for (int j = 0; j < _size; ++j) {               \
+    if (graph.crossed_rows.contains(j)) continue; \
+    expr;                                         \
+  }
+
 #define for_row(x0, x1, expr)                        \
   for (int i = x0; i < (x1); ++i) {                  \
+    if (graph.crossed_columns.contains(i)) continue; \
+    expr;                                            \
+  }
+
+#define foreach_row(expr)                            \
+  for (int i = 0; i < _size; ++i) {                  \
     if (graph.crossed_columns.contains(i)) continue; \
     expr;                                            \
   }
@@ -73,9 +85,7 @@ using PointSet = std::unordered_set<Point, PointHash>;
 #define _erase(c, x) c.erase(std::remove(c.begin(), c.end(), x), c.end())
 
 struct Path {
-  [[nodiscard]] bool IsConstructed() const {
-    return !data.empty();
-  }
+  [[nodiscard]] bool IsConstructed() const { return !data.empty(); }
 
   void TryContinuePath() {
     int begin = data[0];

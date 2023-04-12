@@ -2,6 +2,7 @@
 #define COMMIS_VOYAGEUR__SOLUTION_H_
 
 #include <climits>
+#include <queue>
 #include <unordered_set>
 
 #include "debug.h"
@@ -17,8 +18,7 @@ class Solution {
 
  public:
   [[nodiscard]] Path Solve(const Graph& graph, int estimated_len = INT_MAX) {
-    approximate_path_length_ = estimated_len;
-    optimal_path_.length = INT_MAX;
+    optimal_path_.length = estimated_len;
     Data data{graph, {}};
     print("Graph:\n");
     print_graph(graph);
@@ -28,10 +28,31 @@ class Solution {
     return optimal_path_;
   }
 
+  [[nodiscard]] Path SolveChain(const Graph& graph, int starting_point,
+                                int estimated_len = INT_MAX) {
+    optimal_path_.length =
+        estimated_len == INT_MAX ? estimated_len : estimated_len + 1;
+    Data data{graph, {}};
+    Point exit_edge = {_size - 1, starting_point};
+
+    data.path.PushEdge(exit_edge);
+    data.graph.crossed_columns.insert(exit_edge.x);
+    data.graph.crossed_rows.insert(exit_edge.y);
+    data._graph[exit_edge.x][exit_edge.y] = infty;
+
+    print("Graph:\n");
+    print_graph(graph);
+    print("\n");
+    ReduceMatrix(data.graph, data.path.length);
+    BnB(std::move(data));
+    return optimal_path_;
+  }
+
   void BnB(Data data) {
-    auto branch = FindMaxDeltaD(data.graph);
-    if (branch.empty()) return;
-    IncludeEdge(data, branch[0]);
+    bool status = false;
+    auto branch = FindMaxDeltaD(data.graph, status);
+    if (!status) return;
+    IncludeEdge(data, branch.first);
     if (!IsSimple(data.graph)) {
       ExcludeEdge(data, branch);
     }
@@ -43,11 +64,13 @@ class Solution {
 
   static PointSet FindNullEdges(const Graph& graph) {
     PointSet set;
-    for_column(0, _size, {for_row(0, _size, {
-                 if (_graph[j][i] == 0) {
-                   set.emplace(j, i);
-                 }
-               })});
+    foreach_column({
+      foreach_row({
+        if (_graph[j][i] == 0) {
+          set.emplace(j, i);
+        }
+      });
+    });
     return set;
   }
 
@@ -55,35 +78,29 @@ class Solution {
   // [0] --- coordinates of point
   // [1].y --- column Delta D
   // [1].x --- row Delta D
-  static std::vector<Point> FindMaxDeltaD(Graph& graph) {
+  static std::pair<Point, Point> FindMaxDeltaD(Graph& graph, bool& status) {
     auto null_edges = FindNullEdges(graph);
-    std::vector<Point> new_branch;
-    new_branch.reserve(2);
+    std::pair<Point, Point> new_branch;
     int max_d = 0;
     for (const auto& p : null_edges) {
       auto row_edge = FindRowMinimal(graph, p.y, 0, p.x);
       auto row_edge2 =
           FindRowMinimal(graph, p.y, p.x + 1, _size, row_edge.second);
-      if (row_edge2.first != -1) {
-        row_edge = row_edge2;
-      }
+      if (row_edge2.first != -1) row_edge = row_edge2;
       if (row_edge.second == INT_MAX) row_edge.second = 0;
 
-      auto column_edge = FindColumnMinimal(graph, 0, p.y, p.x);
+      auto column_edge = FindColumnMinimal(graph, p.x, 0, p.y);
       auto column_edge2 =
-          FindColumnMinimal(graph, p.y + 1, _size, p.x, column_edge.second);
-      if (column_edge2.first != -1) {
-        column_edge = column_edge2;
-      }
+          FindColumnMinimal(graph, p.x, p.y + 1, _size, column_edge.second);
+      if (column_edge2.first != -1) column_edge = column_edge2;
       if (column_edge.second == INT_MAX) column_edge.second = 0;
 
       int sum = row_edge.second + column_edge.second;
       if (sum >= max_d) {
-        new_branch.clear();
+        status = true;
         max_d = sum;
-        new_branch.emplace_back(p.y, p.x);
-        new_branch[1].x = row_edge.second;
-        new_branch[1].y = column_edge.second;
+        new_branch.first = {p.y, p.x};
+        new_branch.second = {column_edge.second, row_edge.second};
       }
     }
     return new_branch;
@@ -148,14 +165,14 @@ class Solution {
     }
   }
 
-  void ExcludeEdge(Data data, const std::vector<Point>& branch) {
+  void ExcludeEdge(Data data, const std::pair<Point, Point>& branch) {
     // Exclude edge
-    const auto& edge = branch[0];
+    const auto& edge = branch.first;
     d_graph[edge.y][edge.x] = infty;
     print("Closing edge: (" << edge.y + 1 << ", " << edge.x + 1 << ")\n");
 
     // Reduce matrix
-    const auto& d = branch[1];
+    const auto& d = branch.second;
     if (d.y > 0) {
       data.path.length += d.y;
       Graph& graph = data.graph;
@@ -184,66 +201,58 @@ class Solution {
     }
   }
 
-  static PointSet ReduceMatrix(Graph& graph, int& d) {
-    auto null_edges = ReduceRows(graph, d);
-    auto column_set = ReduceColumns(graph, d);
-    null_edges.insert(column_set.cbegin(), column_set.cend());
+  static void ReduceMatrix(Graph& graph, int& d) {
+    ReduceRows(graph, d);
+    ReduceColumns(graph, d);
     print("Matrix reduced:\n");
     print_graph(graph);
     print("D = " << d << "\n\n");
-    return null_edges;
   }
 
-  static PointSet ReduceRows(Graph& graph, int& d) {
-    PointSet set;
+  static void ReduceRows(Graph& graph, int& d) {
     for_column(0, _size, {
-      auto min_edge = FindRowMinimal(graph, j, 0, _size);
+      auto min_edge = FindRowMinimal(graph, j);
       int min_weight = min_edge.second;
+      if (min_weight == INT_MAX) continue;
       d += min_weight;
-      ReduceRow(graph, j, min_weight, set);
+      ReduceRow(graph, j, min_weight);
     });
-    return set;
   }
 
-  static PointSet ReduceColumns(Graph& graph, int& d) {
-    PointSet set;
+  static void ReduceColumns(Graph& graph, int& d) {
     for_row(0, _size, {
-      auto min_edge = FindColumnMinimal(graph, 0, _size, i);
+      auto min_edge = FindColumnMinimal(graph, i);
       int min_weight = min_edge.second;
+      if (min_weight == INT_MAX) continue;
       d += min_weight;
-      ReduceColumn(graph, i, min_weight, set);
+      ReduceColumn(graph, i, min_weight);
     });
-    return set;
   }
 
-  static inline void ReduceRow(Graph& graph, int y, int weight,
-                               PointSet& null_edges) {
+  static inline void ReduceRow(Graph& graph, int y, int weight) {
     for_row(0, _size, {
       if (is_valid(y, i)) {
         _graph[y][i] -= weight;
-        if (_graph[y][i] == 0) {
-          null_edges.emplace(y, i);
-        }
       }
     });
   }
 
-  static inline void ReduceColumn(Graph& graph, int x, int weight,
-                                  PointSet& null_edges) {
+  static inline void ReduceColumn(Graph& graph, int x, int weight) {
     for_column(0, _size, {
       if (is_valid(j, x)) {
         _graph[j][x] -= weight;
-        if (_graph[j][x] == 0) {
-          null_edges.emplace(j, x);
-        }
       }
     });
   }
 
   // Find minimal edge in row
-  static inline std::pair<int, int> FindRowMinimal(Graph& graph, int y, int x0,
-                                                   int x1,
-                                                   int min_weight = INT_MAX) {
+  // .first --- 'x' position
+  // .second --- value
+  static std::pair<int, int> FindRowMinimal(Graph& graph, int y, int x0 = -1,
+                                            int x1 = -1,
+                                            int min_weight = INT_MAX) {
+    if (x0 == -1) x0 = 0;
+    if (x1 == -1) x1 = int(graph.data.size());
     int k = -1;
     for_row(x0, x1, {
       if (is_valid(y, i) && _graph[y][i] < min_weight) {
@@ -255,8 +264,13 @@ class Solution {
   }
 
   // Find minimal edge in column
-  static inline std::pair<int, int> FindColumnMinimal(
-      Graph& graph, int y0, int y1, int x, int min_weight = INT_MAX) {
+  // .first --- 'y' position
+  // .second --- value
+  static std::pair<int, int> FindColumnMinimal(Graph& graph, int x, int y0 = -1,
+                                               int y1 = -1,
+                                               int min_weight = INT_MAX) {
+    if (y0 == -1) y0 = 0;
+    if (y1 == -1) y1 = int(graph.data.size());
     int k = -1;
     for_column(y0, y1, {
       if (is_valid(j, x) && _graph[j][x] < min_weight) {
@@ -268,10 +282,16 @@ class Solution {
   }
 
   [[nodiscard]] bool IsStillOptimal(const Data& data) const {
-    // TODO: check if path exists?
-
-    // TODO: Estimations
     if (!IsSimple(data.graph)) {
+      if (data.path.length + TwoEdgesEstimation(data.graph) >
+          optimal_path_.length) {
+        print("Two edges estimation failed\n");
+        return false;
+      }
+      if (MinimalSpanningTreeEstimation(data.graph, data.path) > optimal_path_.length) {
+        print("Minimal spanning tree estimation failed\n");
+        return false;
+      }
     }
 
 #ifdef DEBUG
@@ -280,20 +300,69 @@ class Solution {
                 << " >= " << optimal_path_.length << "\n\n";
       return false;
     }
-    if (data.path.length > approximate_path_length_) {
-      std::cout << "Path is not optimal: " << data.path.length << " > "
-                << approximate_path_length_ << "\n\n";
-      return false;
-    }
+
     return true;
 #endif
 
-    return data.path.length < optimal_path_.length &&
-           data.path.length <= approximate_path_length_;
+    return data.path.length <= optimal_path_.length;
+  }
+
+  static int TwoEdgesEstimation(const Graph& graph) {
+    int first = INT_MAX;
+    int second = INT_MAX;
+    foreach_column({
+      foreach_row({
+        if (is_valid(j, i)) {
+          if (_graph[j][i] < second) {
+            second = _graph[j][i];
+          }
+          if (second < first) {
+            std::swap(second, first);
+          }
+        }
+      });
+    });
+    if (first == INT_MAX || second == INT_MAX) {
+      return 0;
+    }
+    return (first + second) / 2;
+  }
+
+  static int MinimalSpanningTreeEstimation(const Graph& graph, const Path& path) {
+    int length = path.length;
+    std::unordered_set<int> vertices;
+    vertices.reserve(path.data.size());
+    for (int i : path.data) {
+      vertices.insert(i);
+    }
+
+    auto comparer = [&graph](const Point& l, const Point& r) {
+      return _graph[l.y][l.x] > _graph[r.y][r.x];
+    };
+    std::priority_queue<Point, std::vector<Point>, decltype(comparer)> queue{
+        comparer};
+    foreach_row({
+      foreach_column({
+        if (is_valid(j, i)) {
+          queue.emplace(j, i);
+        }
+      });
+    });
+
+    while (vertices.size() < graph.data.size()) {
+      if (queue.empty()) return 0;
+      auto edge = queue.top();
+      queue.pop();
+      if (vertices.contains(edge.y) && vertices.contains(edge.x)) {
+        continue;
+      }
+      length += _graph[edge.y][edge.x];
+      vertices.insert({edge.y, edge.x});
+    }
+    return length;
   }
 
  private:
-  int approximate_path_length_ = INT_MAX;
   Path optimal_path_;
 };
 
