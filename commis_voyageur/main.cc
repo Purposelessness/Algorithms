@@ -4,6 +4,7 @@
 #include "approximate.h"
 #include "graph.h"
 #include "solution.h"
+#include "solution_consistent_growth.h"
 
 struct InputData {
   Graph graph;
@@ -41,27 +42,6 @@ InputData ReadGraph(const std::string& filename = "") {
   return {graph, starting_point};
 }
 
-InputData ReadGraphOld(const std::string& filename = "") {
-  int n = 0;
-  int starting_point = 0;
-  Graph graph{};
-  if (filename.empty()) return {};
-
-  std::ifstream file(filename);
-  if (!file.good()) return {};
-  file >> n >> starting_point;
-  --starting_point;
-  graph.data.resize(n);
-  for (int i = 0; i < n; ++i) {
-    graph.data[i].resize(n);
-    for (int j = 0; j < n; ++j) {
-      file >> graph.data[i][j];
-    }
-  }
-
-  return {graph, starting_point};
-}
-
 std::vector<int> NormalizePath(Path& path, int starting_point, int fictitious) {
   std::vector<int> answer;
   answer.resize(path.data.size() - 2);
@@ -89,7 +69,7 @@ bool IsApproximationValid(const Graph& graph, const Path& path) {
 }
 
 int main() {
-  auto p = ReadGraph("0.txt");
+  auto p = ReadGraph("chain.txt");
   auto graph = std::move(p.graph);
   auto starting_point = p.starting_point;
 
@@ -115,19 +95,33 @@ int main() {
   clock_t time = clock();
   Solution solution;
   auto path = solution.SolveChain(graph, starting_point);
+  SolutionSequentialGrowth solution2;
+  auto path2 = solution2.SolveChain(graph, starting_point);
   printf("Time: %lf\n", double(clock() - time) / CLOCKS_PER_SEC);
 
-  if (path.data.empty()) {
+//  if (path.data.empty()) {
+//    std::cout << "No path\n";
+//    return 0;
+//  }
+//  auto answer = NormalizePath(path, starting_point, int(graph.data.size() - 1));
+//  printf("Answer is: ");
+//  for (int i : answer) {
+//    printf("%d ", i + 1);
+//  }
+//  putchar('\n');
+//  printf("Path length: %d\n", path.length);
+
+  if (path2.data.empty()) {
     std::cout << "No path\n";
     return 0;
   }
-  auto answer = NormalizePath(path, starting_point, int(graph.data.size() - 1));
+  auto answer2 = NormalizePath(path2, starting_point, int(graph.data.size() - 1));
   printf("Answer is: ");
-  for (int i : answer) {
+  for (int i : answer2) {
     printf("%d ", i + 1);
   }
   putchar('\n');
-  printf("Path length: %d\n", path.length);
+  printf("Path length: %d\n", path2.length);
 
   return 0;
 }

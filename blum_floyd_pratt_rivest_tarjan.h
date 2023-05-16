@@ -1,9 +1,13 @@
+#ifndef ALGORITHMS_BLUM_FLOYD_PRATT_RIVES_TARJAN_H_
+#define ALGORITHMS_BLUM_FLOYD_PRATT_RIVES_TARJAN_H_
+
 #include <algorithm>
 #include <vector>
 
 int FindMedian(std::vector<int>& vec, int begin, int end);
 
-// range = [begin, end]
+/// returns index of 'median of median' in
+/// range = [begin, end]
 int BlumFloydPrattRivestTarjan(std::vector<int>& vec, int begin = -1,
                                int end = -1) {
   if (begin == -1 || end == -1) {
@@ -17,12 +21,10 @@ int BlumFloydPrattRivestTarjan(std::vector<int>& vec, int begin = -1,
   int l = begin;
   int i = begin;
   for (; i <= end - (kLen - 1); i += kLen) {
-    std::swap(vec[l], vec[FindMedian(vec, i, i + (kLen - 1))]);
-    ++l;
+    std::swap(vec[l++], vec[FindMedian(vec, i, i + (kLen - 1))]);
   }
   if (i <= end) {
-    std::swap(vec[l], vec[FindMedian(vec, i, end)]);
-    ++l;
+    std::swap(vec[l++], vec[FindMedian(vec, i, end)]);
   }
   return BlumFloydPrattRivestTarjan(vec, begin, l - 1);
 }
@@ -33,6 +35,8 @@ int FindMedian(std::vector<int>& vec, int begin, int end) {
   return begin + n / 2;
 }
 
-int MedianOfMedian(std::vector<int>& vec, int begin = -1, int end = -1) {
+inline int MedianOfMedian(std::vector<int>& vec, int begin = -1, int end = -1) {
   return BlumFloydPrattRivestTarjan(vec, begin, end);
 }
+
+#endif  // ALGORITHMS_BLUM_FLOYD_PRATT_RIVES_TARJAN_H_
